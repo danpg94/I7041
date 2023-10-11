@@ -105,7 +105,7 @@ with open(archivo_d) as f:
     lineas = f.readlines()
 
     for i in range(len(lineas)):
-        v = lineas[i].split('/')
+        v = lineas[i].replace('\n', '').split(' ')
         vector = list(map(int, v))
         d.append(vector)
 
@@ -119,7 +119,7 @@ with open(archivo_x) as f:
 
 #Llenar la matriz X con los valores del archivo de texto
 for i in range(len(lineas)):
-    v = lineas[i].split('/') #Funciones de python para trabajar cadenas 
+    v = lineas[i].replace('\n', '').split(' ') #Funciones de python para trabajar cadenas 
     vector = list(map(float, v))
     ax.plot(vector[0],vector[1],'D',color=colores[int("".join(str(j) for j in d[i]),2)])
     X.append([1,vector[0],vector[1]])
