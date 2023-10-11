@@ -9,50 +9,25 @@ X = []
 W = [] 
 d = [] 
 
-colores = ['#44ffff','#cc8800','#ff4040','#0a47e0','#ff9966','#ebf5fe',
+colores = ['#44ff5c','#faf18e','#ff4040','#0a47e0','#ff9966','#ebf5fe',
             '#a5f99e','#143264','#082d28','#f5f5f5','#faf18e','#a5c0fa',
             '#f5cccc','#000080','#660066','#6d33b4','#AAF35C','#31F8EC',]
 
 
 def FuncionActivacion (W,X):
-    global funcion_evaluar, a
     v = np.dot(W,X)
-
-    if funcion_evaluar.get() == 0:
-        #logistica
-        F_u = 1/(1+np.exp(-(float(a.get()))*v))
-
-    elif funcion_evaluar.get() == 1:
-        #Tangente hiperbolica
-        F_u = float(a.get())*(np.tanh(v))
-        
-    elif funcion_evaluar.get() == 2:
-        #Lineal
-        F_u = float(a.get())*v
-
+    #logistica
+    F_u = 1/(1+np.exp(-(float(1))*v))
     return F_u
 
 
 def FuncionDerivacion(Y):
-    global funcion_evaluar, a
-
-    if funcion_evaluar.get() == 0:
-        #Logistica
-        F_u = float(a.get())*Y*(1-Y)
-
-    elif funcion_evaluar.get() == 1:
-        #Tangente hiperbolica
-        F_u = float(a.get())*(1-(Y**2))
-    
-    elif funcion_evaluar.get() == 2:
-        #Lineal
-        F_u = float(a.get())
-
+    #Logistica
+    F_u = float(1)*Y*(1-Y)
     return F_u
 
 def Perceptron():
     global  Eta, Epocas_str, X, d, W
-
     Epocas = int(Epocas_str.get())
     error = True
 
@@ -94,15 +69,13 @@ def Perceptron():
             m = -W[i][1]/W[i][2]
             b = -W[i][0]/W[i][2]
 
-            plt.axline((X[0][1], (X[0][1]*m)+b), slope=m, color ='k', linestyle='--')
+            plt.axline((X[0][1], (X[0][1]*m)+b), slope=m, color ='c', linestyle='-')
 
-
-         
         ejeX = [-10,10] 
         ejeY = [-10,10]
         ceros = [0,0] 
-        plt.plot(ejeX, ceros, 'c') 
-        plt.plot(ceros, ejeY, 'c') 
+        plt.plot(ejeX, ceros, 'k', linestyle='--') 
+        plt.plot(ceros, ejeY, 'k', linestyle='--') 
         plt.xlim(-10,10)
         plt.ylim(-10,10)
 
@@ -112,7 +85,7 @@ def Perceptron():
     print("terminado")
 
 
-fig, ax = plt.subplots(facecolor='#ffcc66')
+fig, ax = plt.subplots(facecolor='#ffffff')
 plt.xlim(-10,10)
 plt.ylim(-10,10)
 
@@ -120,8 +93,8 @@ plt.ylim(-10,10)
 ejeX = [-10,10] #marcar las rectas del plano cartesiano 
 ejeY = [-10,10]
 ceros = [0,0] 
-plt.plot(ejeX, ceros, 'c') #se grafica una linea en el eje x
-plt.plot(ceros, ejeY, 'c') #se grafica una linea en el eje y
+plt.plot(ejeX, ceros, 'k', linestyle='--') #se grafica una linea en el eje x
+plt.plot(ceros, ejeY, 'k', linestyle='--') #se grafica una linea en el eje y
 
 #Ingresar los archivos 
 archivo_d = "archivo_d.txt"
@@ -161,7 +134,7 @@ Eta = StringVar(mainwindow)
 Epocas_str = StringVar(mainwindow)
 funcion_evaluar = IntVar(mainwindow)
 error_minimo = StringVar(mainwindow)
-a = StringVar(mainwindow)
+#a = StringVar(mainwindow)
 
 #Grafica en la interfaz 
 canvas = FigureCanvasTkAgg(fig, master = mainwindow)
@@ -169,10 +142,10 @@ canvas.get_tk_widget().place(x=10, y=10, width=580, height=580)
 
 
 #Etiquetas
-a_label = Label(mainwindow, text = "A: ")
-a_label.place(x=600, y=40) 
-a_entry = Entry(mainwindow, textvariable=a)
-a_entry.place(x=600, y=70) 
+#a_label = Label(mainwindow, text = "A: ")
+#a_label.place(x=600, y=40) 
+#a_entry = Entry(mainwindow, textvariable=a)
+#a_entry.place(x=600, y=70) 
 
 Eta_label = Label(mainwindow, text = "ETA: ")
 Eta_label.place(x=600, y=100) 
@@ -190,8 +163,8 @@ Error_entry = Entry(mainwindow, textvariable=error_minimo)
 Error_entry.place(x=600, y=250) 
 
 #button
-logistica_rb = Radiobutton(mainwindow, text="Logistica", variable=funcion_evaluar, value=0)
-logistica_rb.place(x=600, y=280)
+#logistica_rb = Radiobutton(mainwindow, text="Logistica", variable=funcion_evaluar, value=0)
+#logistica_rb.place(x=600, y=280)
 
 #button
 start_button = Button(mainwindow, text="Iniciar", command=lambda:threading.Thread(target=Perceptron).start())
