@@ -16,9 +16,6 @@ class Adaline: # clase adaline
         self.y = np.zeros(0)
         self.GradienteLocal = 0
         self.derivatives = []
-        self.a = []
-        self.n = []
-        self.s = []
 
     def Suposicion(self, p):
         return self.sigmoidal(np.dot(p, self.w))
@@ -30,55 +27,6 @@ class Adaline: # clase adaline
 
     def ObtenerSalida(self, p):
         self.y = self.Suposicion(p)
-    
-    def forward_propagate(self, inputs):
-        self.a = []
-        self.n = []
-        activation_values = inputs
-        for w in self.weights:
-            activation_values = np.insert(activation_values, 0, -1)            
-            activation_values = activation_values.reshape((activation_values.shape[0], 1))
-            self.a.append(activation_values)
-            net_inputs = np.dot(w, activation_values)
-            self.n.append(net_inputs)
-            activation_values = self.sigmoidal(net_inputs)
-        self.a.append(activation_values)
-        return activation_values
-    
-    def update(self):#calula el promedido de los gradientes y actualiza pesos
-        cont=self.cont
-        for a in self.batch:
-            for i in range(len(a)):
-                a[i]=a[i]/cont
-        for i in range(len(self.batch)):       
-            self.weights[i] = self.batch[i]
-        #print("cont:"+str(self.cont))
-
-    def Jacobiana(self, error):#calcula las jacobianas
-        self.s = []
-        self.derivatives = []
-        num_layers = len(self.a)
-        output_layer = num_layers - 1
-        for i in reversed(range(1, num_layers)):
-            is_output_layer = i == output_layer
-            a = self.a[i] if is_output_layer else np.delete(self.a[i], 0, 0)
-            d = self.sigmoidal(a)
-            derivatives = np.diag(d.reshape((d.shape[0],)))
-            self.derivatives = [derivatives] + self.derivatives
-            if is_output_layer:
-                s = np.dot(derivatives, error)
-                self.s.append(s)
-            else:
-                weights = np.delete(self.weights[i], 0, 1)
-                jacobian_matrix = np.dot(derivatives, weights.T)#conseguimos nuestra matrix
-                #print(jacobian_matrix)
-                s = np.dot(jacobian_matrix, self.s[0])#sacarle inversa
-                self.s = [s] + self.s
-
-    def gradient_descent(self, lr):
-        for i in range(len(self.weights)):
-            new_w = self.weights[i] + lr * np.dot(self.s[i], self.a[i].T)
-            self.weights[i] = new_w
 
     def GradienteLocalFunc(self, PuntoY, CapaSiguiente=None):
         sigmoidal = self.sigmoidal(self.y, True)
@@ -96,13 +44,7 @@ class Adaline: # clase adaline
                 PuntoY=PuntoY, CapaSiguiente=CapaSiguiente
             )
         for i in range(self.inputs):
-            self.w[i] += self.GradienteLocal * CapaAnteriorY[i] * self.lr
-
-def ColorDePunto(output):
-    if output == 0:
-        return "blue"
-    if output == 1:
-        return "red"       
+            self.w[i] += self.GradienteLocal * CapaAnteriorY[i] * self.lr      
 
 class Window:
     def __init__(self, window):
@@ -111,23 +53,25 @@ class Window:
         style.configure('W.TButton', font =('Arial', 15, 'bold'),foreground = 'blue')
         
         self.window = window
-        self.window.title("Practica 5")
-        self.window.geometry("800x500")
-        self.colors = ("blue", "red",)
+        self.window.title("Practica 5&6")
+        self.window.geometry("1000x500")
+        self.colors = ("blue", "red")
         self.cmap = ListedColormap(self.colors[: len(np.unique([0, 1]))])
 
         self.points = np.zeros((0,3))
         self.pointsY = np.zeros(0)
 
         self.startBtn: Button
-        self.pesosBtn: Button
-        self.entryLabels = ["No Neuronas: ", "LR: ", "A: "]
-        self.entries: Entry = []
+        self.clear: Button
+        
+        self.eta_str = StringVar(self.window)
+        self.epochs_str = StringVar(self.window)
+        self.neurons_str = StringVar(self.window)    
 
         self.figure = None
         self.graph = None
         self.canvas = None
-        self.limits = [-5, 5] #limites de grafica
+        self.limits = [-10, 10] #limites de grafica
 
         self.x = np.linspace(self.limits[0], self.limits[1], 50)
         self.y = np.linspace(self.limits[0], self.limits[1], 50)
@@ -146,9 +90,25 @@ class Window:
         lowerFrame = Frame(actionFrame)
         lowerFrame.grid(row=2, column=0)
        
+        self.n_neurons_lbl = Label(master=lowerFrame, text="Numero de Neuronas:")
+        self.n_neurons_lbl.grid(row=0, column=0)
+        self.n_neurons = Entry(master=lowerFrame, textvariable=self.neurons_str, width=10)
+        self.n_neurons.grid(row=0, column=1)
+        
+        self.eta_lbl = Label(master=lowerFrame, text="Tasa de aprendizaje:")
+        self.eta_lbl.grid(row=1, column=0)
+        self.eta_entry = Entry(master=lowerFrame, textvariable=self.eta_str, width=10)
+        self.eta_entry.grid(row=1, column=1)
+        
+        self.epochs_lbl = Label(master=lowerFrame, text="Epocas:")
+        self.epochs_lbl.grid(row=2, column=0)
+        self.epochs_entry = Entry(master=lowerFrame, textvariable=self.epochs_str, width=10)
+        self.epochs_entry.grid(row=2, column=1)
+        
         self.startBtn = Button(master=lowerFrame,style = 'W.TButton', text="Iniciar", command=self.start, width=8)
-        self.startBtn.grid(row=1, column=0)
-        self.figure = Figure(figsize=(6, 5), dpi=100,facecolor='#dcdcdc')
+        self.startBtn.grid(row=3, column=0)
+        
+        self.figure = Figure(figsize=(6, 5), dpi=100,facecolor='#acacac')
         self.graph = self.figure.add_subplot(111)
         self.ConfigGrafica()
 
@@ -166,11 +126,9 @@ class Window:
         self.graph.axvline(x=0, color="k",linewidth=.6)
 
     def start(self): # Obtener valores
-        neuronas = 10
-        error=0.1
-        EpocasTotales = 1000
-        lr = 0.1
-        epocas = 0
+        neuronas = int(self.neurons_str.get())
+        epocas = int(self.epochs_entry.get())
+        lr = float(self.eta_entry.get())
         hiddenLayer = np.array([])
         #crear pesos y capa salida
         outputLayer = Adaline(lr=lr, inputs=neuronas + 1, outputLayer=True)
@@ -180,10 +138,9 @@ class Window:
         #crear matriz identidad 
         grid = np.zeros((neuronas, len(self.inputs)))
 
-        while epocas <= EpocasTotales:
+        while epocas:
             self.window.update()
             self.ConfigGrafica()
-            #m= outputLayer.Jacobiana(error)
             #verificar los puntos de la grafica para hacerlos converger   
             for i in range(len(self.points)):
                 [layer.ObtenerSalida(self.points[i]) for layer in hiddenLayer]
@@ -192,9 +149,9 @@ class Window:
                 [layer.hessiana(CapaAnteriorY=self.points[i], CapaSiguiente=outputLayer) for layer in hiddenLayer]
             # puntos grafica
             for i in range(len(self.points)):
-                self.graph.plot(self.points[i][1], self.points[i][2], marker="o", c=ColorDePunto(self.pointsY[i]))
-            print("N° de epoca: ", epocas)
-            epocas += 1
+                self.graph.plot(self.points[i][1], self.points[i][2], marker="o", c=self.ColorDePunto(self.pointsY[i]))
+            print("N° de epocas restantes: ", epocas)
+            epocas -= 1
             #imprimir funcion contorno
             for j in range(neuronas):
                 grid[j] = hiddenLayer[j].Suposicion(self.inputs)
@@ -211,8 +168,14 @@ class Window:
             deseado = 1
         self.points = np.append(self.points, [[1, float(event.xdata), float(event.ydata)]], axis=0)
         self.pointsY = np.append(self.pointsY, [deseado])
-        self.graph.plot(event.xdata,event.ydata,marker="o",c=ColorDePunto(deseado),)
+        self.graph.plot(event.xdata,event.ydata,marker="o",c=self.ColorDePunto(deseado),)
         self.canvas.draw()
+
+    def ColorDePunto(self, output):
+        if output == 0:
+            return self.colors[0]
+        if output == 1:
+            return self.colors[1] 
 
 window = Tk()
 app = Window(window)
