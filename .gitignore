@@ -2,3 +2,5 @@ env/
 *.docx
 *.tmp
 *.pdf
+proyecto/easy_ham/
+proyecto/spam/
